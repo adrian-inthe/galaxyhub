@@ -41,16 +41,30 @@
       @click="setResourceName('starships')"
     />
   </nav>
+  <Card v-if="showResourceList">
+    <template #title
+      ><span
+        class="text-2xl text-gray-700 dark:text-white font-semibold uppercase"
+        >{{ resourceName === "people" ? "characters" : resourceName }}</span
+      >
+    </template>
+    <template #content>
+      <ResourceList />
+    </template>
+  </Card>
 </template>
 
 <script async lang="ts" setup>
-import { computed } from "vue";
+import { computed, ref } from "vue";
+import Card from "primevue/card";
 import NavigationCard from "../components/NavigationCard.vue";
 import { useResourceStore } from "../store/resource.ts";
+import ResourceList from "../components/ResourceList.vue";
 import { SWAPIResourceName } from "../types/global";
 
 const resourceStore = useResourceStore();
 
+const showResourceList = ref(false);
 const resourceName = computed({
   get: (): string | null => resourceStore.resourceName,
   set: (value: SWAPIResourceName) => {
@@ -60,5 +74,6 @@ const resourceName = computed({
 
 async function setResourceName(name: SWAPIResourceName) {
   resourceName.value = name;
+  showResourceList.value = true;
 }
 </script>
