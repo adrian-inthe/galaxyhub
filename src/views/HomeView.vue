@@ -41,7 +41,7 @@
       @click="setResourceName('starships')"
     />
   </nav>
-  <Card v-if="showResourceList">
+  <Card v-if="showResourceList" ref="datatableElement">
     <template #title
       ><span
         class="text-2xl text-gray-700 dark:text-white font-semibold uppercase"
@@ -55,7 +55,7 @@
 </template>
 
 <script async lang="ts" setup>
-import { computed, ref } from "vue";
+import { computed, nextTick, Ref, ref } from "vue";
 import Card from "primevue/card";
 import NavigationCard from "../components/NavigationCard.vue";
 import { useResourceStore } from "../store/resource.ts";
@@ -65,6 +65,7 @@ import { SWAPIResourceName } from "../types/global";
 const resourceStore = useResourceStore();
 
 const showResourceList = ref(false);
+const datatableElement: Ref<{ $el: HTMLElement } | null> = ref(null);
 const resourceName = computed({
   get: (): string | null => resourceStore.resourceName,
   set: (value: SWAPIResourceName) => {
@@ -73,7 +74,22 @@ const resourceName = computed({
 });
 
 async function setResourceName(name: SWAPIResourceName) {
+  showResourceList.value = false;
+  await nextTick();
   resourceName.value = name;
   showResourceList.value = true;
+  // PrimeVue DataTable requires 3 ticks!
+  await nextTick();
+  await nextTick();
+  await nextTick();
+  if (
+    datatableElement.value &&
+    datatableElement.value.$el instanceof HTMLElement
+  ) {
+    datatableElement.value.$el.scrollIntoView({
+      behavior: "smooth",
+      block: "start",
+    });
+  }
 }
 </script>
