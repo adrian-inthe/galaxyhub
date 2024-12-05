@@ -40,17 +40,23 @@
       <Column class="w-1/6 capitalize" field="passengers" header="Passengers" />
     </template>
     <Column class="w-1/6">
-      <template>
+      <template #body="slotProps">
         <Button
           class="mr-2"
           icon="pi pi-search"
           label="More"
           severity="info"
           size="small"
+          @click="dataForDialog = slotProps.data"
         />
       </template>
     </Column>
   </DataTable>
+  <ResourceItem
+    v-if="dataForDialog"
+    :data="dataForDialog"
+    @dialogClosed="onDialogClosed"
+  />
 </template>
 
 <script async lang="ts" setup>
@@ -62,6 +68,7 @@ import { fetchResourceList } from "../services/api.ts";
 import { ResourceInterface } from "../types/global";
 import Column from "primevue/column";
 import Button from "primevue/button";
+import ResourceItem from "./ResourceItem.vue";
 
 const resourceStore = useResourceStore();
 const allFetchedItems: Ref<ResourceInterface[]> = ref([]);
@@ -69,6 +76,7 @@ const totalItems = ref(0);
 const itemsPerPage = 10;
 const isLoading = ref(false);
 const firstItemToShowIndex = ref(0);
+const dataForDialog: Ref<ResourceInterface | null> = ref(null);
 
 const resourceName = computed(() => resourceStore.resourceName);
 const currentPageItems = computed(() => {
@@ -108,5 +116,9 @@ async function fetchData(datatablePageNumber: number) {
   } finally {
     isLoading.value = false;
   }
+}
+
+function onDialogClosed() {
+  dataForDialog.value = null;
 }
 </script>
