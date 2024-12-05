@@ -41,6 +41,39 @@
       @click="setResourceName('starships')"
     />
   </nav>
+  <Card v-if="favoritePeople && favoritePeople.length" class="mb-5">
+    <template #title
+      ><span
+        class="text-2xl text-gray-700 dark:text-white font-semibold uppercase"
+        ><span class="pi pi-star-fill" /> My Favorite People</span
+      >
+    </template>
+    <template #content>
+      <ResourceList :favorites="favoritePeople" resourceName="people" />
+    </template>
+  </Card>
+  <Card v-if="favoritePlanets && favoritePlanets.length" class="mb-5">
+    <template #title
+      ><span
+        class="text-2xl text-gray-700 dark:text-white font-semibold uppercase"
+        ><span class="pi pi-star-fill" /> My Favorite Planets</span
+      >
+    </template>
+    <template #content>
+      <ResourceList :favorites="favoritePlanets" resourceName="planets" />
+    </template>
+  </Card>
+  <Card v-if="favoriteStarships && favoriteStarships.length" class="mb-5">
+    <template #title
+      ><span
+        class="text-2xl text-gray-700 dark:text-white font-semibold uppercase"
+        ><span class="pi pi-star-fill" /> My Favorite Starships</span
+      >
+    </template>
+    <template #content>
+      <ResourceList :favorites="favoriteStarships" resourceName="starships" />
+    </template>
+  </Card>
   <Card v-if="showResourceList" ref="datatableElement">
     <template #title
       ><span
@@ -59,10 +92,12 @@ import { computed, nextTick, Ref, ref } from "vue";
 import Card from "primevue/card";
 import NavigationCard from "../components/NavigationCard.vue";
 import { useResourceStore } from "../store/resource.ts";
+import { useFavoritesStore } from "../store/favorites.ts";
 import ResourceList from "../components/ResourceList.vue";
 import { SWAPIResourceName } from "../types/global";
 
 const resourceStore = useResourceStore();
+const favoritesStore = useFavoritesStore();
 
 const showResourceList = ref(false);
 const datatableElement: Ref<{ $el: HTMLElement } | null> = ref(null);
@@ -72,6 +107,9 @@ const resourceName = computed({
     resourceStore.setResourceName(value);
   },
 });
+const favoritePeople = computed(() => favoritesStore.favoritePeople);
+const favoritePlanets = computed(() => favoritesStore.favoritePlanets);
+const favoriteStarships = computed(() => favoritesStore.favoriteStarships);
 
 async function setResourceName(name: SWAPIResourceName) {
   showResourceList.value = false;

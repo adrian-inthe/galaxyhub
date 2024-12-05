@@ -1,12 +1,12 @@
 <template>
   <DataTable
     :first="firstItemToShowIndex"
-    :lazy="true"
+    :lazy="!props.favorites"
     :loading="isLoading"
-    :paginator="true"
-    :rows="itemsPerPage"
+    :paginator="!props.favorites"
+    :rows="!props.favorites ? itemsPerPage : undefined"
     :totalRecords="totalItems"
-    :value="currentPageItems"
+    :value="props.favorites || currentPageItems"
     @page="setCurrentPageItems"
   >
     <template #loading>
@@ -49,6 +49,20 @@
           size="small"
           @click="dataForDialog = slotProps.data"
         />
+        <template v-if="isInFavorites(slotProps.data.url)">
+          <Button
+            icon="pi pi-star-fill"
+            size="small"
+            @click="removeFromFavorites(slotProps.data.url)"
+          />
+        </template>
+        <template v-else>
+          <Button
+            icon="pi pi-star"
+            size="small"
+            @click="addToFavorites(slotProps.data)"
+          />
+        </template>
       </template>
     </Column>
   </DataTable>
@@ -60,17 +74,32 @@
 </template>
 
 <script async lang="ts" setup>
-import { computed, onMounted, Ref, ref } from "vue";
+import { computed, onMounted, PropType, Ref, ref } from "vue";
 import DataTable, { DataTablePageEvent } from "primevue/datatable";
 import ProgressSpinner from "primevue/progressspinner";
 import { useResourceStore } from "../store/resource.ts";
+
 import { fetchResourceList } from "../services/api.ts";
-import { ResourceInterface } from "../types/global";
+import { ResourceInterface, SWAPIResourceName } from "../types/global";
 import Column from "primevue/column";
 import Button from "primevue/button";
 import ResourceItem from "./ResourceItem.vue";
+import { useFavoritesStore } from "../store/favorites.ts";
 
 const resourceStore = useResourceStore();
+const favoritesStore = useFavoritesStore();
+
+const props = defineProps({
+  favorites: {
+    type: Object as PropType<ResourceInterface[]>,
+    required: false,
+  },
+  resourceName: {
+    type: String as PropType<SWAPIResourceName>,
+    require: false,
+  },
+});
+
 const allFetchedItems: Ref<ResourceInterface[]> = ref([]);
 const totalItems = ref(0);
 const itemsPerPage = 10;
@@ -78,7 +107,9 @@ const isLoading = ref(false);
 const firstItemToShowIndex = ref(0);
 const dataForDialog: Ref<ResourceInterface | null> = ref(null);
 
-const resourceName = computed(() => resourceStore.resourceName);
+const resourceName = computed(
+  () => props.resourceName || resourceStore.resourceName,
+);
 const currentPageItems = computed(() => {
   const startIndex = firstItemToShowIndex.value;
   const endIndex = startIndex + itemsPerPage;
@@ -86,7 +117,9 @@ const currentPageItems = computed(() => {
 });
 
 onMounted(() => {
-  fetchData(0);
+  if (!props.favorites) {
+    fetchData(0);
+  }
 });
 
 async function setCurrentPageItems(event: DataTablePageEvent) {
@@ -120,5 +153,17 @@ async function fetchData(datatablePageNumber: number) {
 
 function onDialogClosed() {
   dataForDialog.value = null;
+}
+
+function addToFavorites(data: ResourceInterface) {
+  favoritesStore.setFavorite(resourceName.value, data);
+}
+
+function isInFavorites(url: string): boolean {
+  return favoritesStore.findFavorite(resourceName.value, url) !== -1;
+}
+
+function removeFromFavorites(url: string) {
+  favoritesStore.deleteFavorite(resourceName.value, url);
 }
 </script>
