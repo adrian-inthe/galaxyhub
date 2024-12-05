@@ -1,0 +1,6 @@
+services:
+  galaxyhub:
+    build:
+      context: .
+    ports:
+      - '80:80'
